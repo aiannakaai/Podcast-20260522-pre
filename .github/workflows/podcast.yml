@@ -1,0 +1,56 @@
+name: Daily Podcast Generation
+
+on:
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      date_override:
+        description: '日付オーバーライド（例: 2026-05-22）'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: FFmpeg をインストール
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Python をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 依存ライブラリをインストール
+        run: pip install google-genai google-auth google-auth-oauthlib google-api-python-client pydub requests
+
+      - name: Podcast を生成
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          DATE_OVERRIDE: ${{ inputs.date_override }}
+        run: python main.py
+
+      - name: 中間成果物をコミット
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          FILES=""
+          [ -f output/research.json ] && FILES="$FILES output/research.json"
+          [ -f output/script.json ] && FILES="$FILES output/script.json"
+          [ -f researched_versions.json ] && FILES="$FILES researched_versions.json"
+          if [ -n "$FILES" ]; then
+            git add $FILES
+            git diff --staged --quiet || (git commit -m "Podcast content $(date -u +%Y-%m-%d)" && git push)
+          fi

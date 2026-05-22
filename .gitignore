@@ -1,0 +1,22 @@
+# Audio files (not committed to git)
+*.wav
+*.mp3
+output/*.wav
+output/*.mp3
+
+# Claude Code directory
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
