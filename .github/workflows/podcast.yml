@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: FFmpeg をインストール
-        run: sudo apt-get install -y ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --fix-missing ffmpeg
 
       - name: Python をセットアップ
         uses: actions/setup-python@v5
