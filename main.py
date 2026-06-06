@@ -69,25 +69,48 @@ def main() -> None:
         print("リリースが見つかりません。終了します。")
         sys.exit(0)
 
-    # Step 2: 未調査バージョンを特定
+    # Step 2: 対象バージョンを特定
     researched = load_researched_versions()
     print(f"調査済みバージョン: {sorted(researched)}")
 
-    target_release = None
-    for release in releases:
-        tag = release.get("tag_name", "")
-        if (
-            tag
-            and tag not in researched
-            and not release.get("draft", False)
-            and not release.get("prerelease", False)
-        ):
-            target_release = release
-            break
+    jst = timezone(timedelta(hours=9))
 
-    if not target_release:
-        print("新しい未調査バージョンはありません。終了します。")
-        sys.exit(0)
+    def release_date_jst(release: dict) -> str:
+        pub = release.get("published_at", "")
+        if not pub:
+            return ""
+        dt = datetime.fromisoformat(pub.replace("Z", "+00:00"))
+        return dt.astimezone(jst).strftime("%Y-%m-%d")
+
+    def is_valid(release: dict) -> bool:
+        return not release.get("draft", False) and not release.get("prerelease", False)
+
+    date_override = os.environ.get("DATE_OVERRIDE", "").strip()
+    target_release = None
+
+    if date_override:
+        # 指定日付にリリースされた最新バージョンを選択
+        for release in releases:
+            if is_valid(release) and release_date_jst(release) == date_override:
+                target_release = release
+                break
+        if not target_release:
+            print(f"{date_override} にリリースされたバージョンが見つかりません。終了します。")
+            sys.exit(0)
+        version = target_release["tag_name"]
+        if version in researched:
+            print(f"{version} は調査済みです。終了します。")
+            sys.exit(0)
+    else:
+        # 未調査の最新バージョンを選択
+        for release in releases:
+            tag = release.get("tag_name", "")
+            if tag and tag not in researched and is_valid(release):
+                target_release = release
+                break
+        if not target_release:
+            print("新しい未調査バージョンはありません。終了します。")
+            sys.exit(0)
 
     version = target_release["tag_name"]
     release_notes = target_release.get("body") or "変更点の詳細は GitHub Releases を参照してください。"
