@@ -8,10 +8,10 @@ SPEAKERS = [
 DRIVE_FOLDER_NAME = "Podcasts"
 TARGET_DURATION_MINUTES = 5
 
-RESEARCH_MODEL_PRIMARY = "gemini-2.5-flash-lite"
+RESEARCH_MODEL_PRIMARY = "gemini-3.1-flash"
 RESEARCH_MODEL_FALLBACK = "gemini-2.5-flash"
-TTS_MODEL_PRIMARY = "gemini-2.5-flash-preview-tts"
-TTS_MODEL_FALLBACK = "gemini-3.1-flash-tts-preview"
+TTS_MODEL_PRIMARY = "gemini-2.5-pro-preview-tts"
+TTS_MODEL_FALLBACK = "gemini-2.5-flash-preview-tts"
 
 TTS_CHUNK_MAX_CHARS = 1799
 
